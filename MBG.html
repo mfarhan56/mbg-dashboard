@@ -1,0 +1,2821 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pengambilan MBG</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #10b981;
+            --primary-hover: #059669;
+            --secondary-color: #6c757d;
+            --bg-color: #f3f4f6;
+            --sidebar-bg: #ffffff;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --card-bg: #ffffff;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --success-color: #10b981;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .sidebar .brand {
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            padding: 0.5rem 1.5rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu a i {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .top-navbar {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-navbar h4 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .datetime {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .user-profile img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Page Content */
+        .page-content {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .section-page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s;
+            border: none;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.primary { background-color: rgba(16, 185, 129, 0.1); color: var(--primary-color); }
+        .stat-icon.success { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .stat-icon.warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+        .stat-icon.danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+
+        .stat-details h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .stat-details p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Scanner Area */
+        .scanner-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            text-align: center;
+            border: 2px dashed #e5e7eb;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Result Card */
+        .result-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            height: 100%;
+        }
+
+        .result-card .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 3px solid var(--bg-color);
+        }
+
+        /* Group Card */
+        .group-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border-top: 4px solid var(--primary-color);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .group-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* ID Card Print */
+        .id-card-wrapper {
+            display: inline-block;
+            width: 300px;
+            height: 450px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        .id-card-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .id-card-body {
+            padding: 20px;
+            text-align: center;
+        }
+        .id-card-qr {
+            margin: 15px auto;
+            width: 150px;
+            height: 150px;
+        }
+        .id-card-footer {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #cetak-kartu, #cetak-kartu * {
+                visibility: visible;
+            }
+            #cetak-kartu {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .sidebar, .top-navbar, .btn {
+                display: none !important;
+            }
+            .id-card-wrapper {
+                box-shadow: none;
+                border: 1px solid #000;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="bi bi-box-seam-fill"></i> MBG System
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#dashboard" class="active"><i class="bi bi-grid-1x2-fill"></i> Dashboard Overview</a></li>
+            <li><a href="#scan" onclick="setScanMode('pickup')"><i class="bi bi-box-arrow-up-right"></i> Scan Pengambilan</a></li>
+            <li><a href="#scan" onclick="setScanMode('return')"><i class="bi bi-box-arrow-in-down-left"></i> Scan Pengembalian</a></li>
+            <li><a href="#groups"><i class="bi bi-people-fill"></i> Data Kelompok</a></li>
+            <li><a href="#students"><i class="bi bi-person-lines-fill"></i> Data Peserta</a></li>
+            <li><a href="#print"><i class="bi bi-printer-fill"></i> Cetak Kartu</a></li>
+            <hr class="mx-3 my-2 text-muted">
+            <li><a href="#" onclick="resetData()"><i class="bi bi-arrow-counterclockwise text-danger"></i> <span class="text-danger">Reset Data</span></a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar">
+            <h4><i class="bi bi-qr-code-scan me-2"></i>Sistem Pengambilan MBG</h4>
+            <div class="navbar-right">
+                <div class="datetime" id="current-datetime">Loading...</div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Petugas+Sekolah&background=10b981&color=fff" alt="User">
+                    Petugas Sekolah
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+            <!-- DASHBOARD SECTION -->
+            <section id="dashboard" class="section-page active">
+                <div class="row">
+                    <!-- KOLOM PENGAMBILAN -->
+                    <div class="col-lg-6 mb-4">
+                        <h5 class="mb-3 fw-bold text-success"><i class="bi bi-box-arrow-up-right me-2"></i>Dashboard Pengambilan</h5>
+                        <div class="row mb-3">
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3">
+                                    <div class="stat-icon primary"><i class="bi bi-people"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-total" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Total Peserta</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3" style="border: 2px solid var(--success-color);">
+                                    <div class="stat-icon success"><i class="bi bi-check-circle"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-picked" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Peserta Sdh Ambil</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3">
+                                    <div class="stat-icon warning"><i class="bi bi-collection"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-groups" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Total Kelompok</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3" style="border: 2px solid var(--success-color);">
+                                    <div class="stat-icon success"><i class="bi bi-check2-all"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-groups-picked" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Klp Sdh Ambil</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm" style="border-top: 3px solid var(--danger-color) !important;">
+                            <div class="card-header bg-white py-2">
+                                <h6 class="mb-0 fw-bold text-danger" style="font-size: 0.9rem;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Kelompok Belum Ambil</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th class="px-3">Kelompok</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="unpicked-groups-list">
+                                            <tr><td colspan="2" class="text-center py-3 text-muted">Memuat...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KOLOM PENGEMBALIAN -->
+                    <div class="col-lg-6 mb-4">
+                        <h5 class="mb-3 fw-bold text-primary"><i class="bi bi-box-arrow-in-down-left me-2"></i>Dashboard Pengembalian</h5>
+                        <div class="row mb-3">
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3" style="border: 2px solid var(--primary-color);">
+                                    <div class="stat-icon primary" style="background-color: rgba(37, 99, 235, 0.1); color: #2563eb;"><i class="bi bi-check-circle"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-returned" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Peserta Sdh Kembali</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3" style="border: 2px solid var(--danger-color);">
+                                    <div class="stat-icon danger"><i class="bi bi-x-circle"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-notreturned" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Peserta Blm Kembali</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3" style="border: 2px solid var(--primary-color);">
+                                    <div class="stat-icon primary" style="background-color: rgba(37, 99, 235, 0.1); color: #2563eb;"><i class="bi bi-check2-all"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-groups-returned" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Klp Sdh Kembali</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="stat-card p-3" style="border: 2px solid var(--danger-color);">
+                                    <div class="stat-icon danger"><i class="bi bi-exclamation-circle"></i></div>
+                                    <div class="stat-details">
+                                        <h3 id="stat-groups-notreturned" style="font-size: 1.2rem;">0</h3>
+                                        <p style="font-size: 0.8rem;">Klp Blm Kembali</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm" style="border-top: 3px solid var(--danger-color) !important;">
+                            <div class="card-header bg-white py-2">
+                                <h6 class="mb-0 fw-bold text-danger" style="font-size: 0.9rem;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Kelompok Belum Kembali</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th class="px-3">Kelompok</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="unreturned-groups-list">
+                                            <tr><td colspan="2" class="text-center py-3 text-muted">Memuat...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCANNER SECTION -->
+            <section id="scan" class="section-page">
+                <div class="row">
+                    <!-- Scanner Area -->
+                    <div class="col-md-6 mb-4">
+                        <div class="scanner-container h-100 d-flex flex-column justify-content-center align-items-center">
+                            <h5 class="mb-4 fw-bold" id="scan-title">Scan QR Code (Pengambilan)</h5>
+                            <button id="btn-start-scan" class="btn btn-success btn-lg px-4 rounded-pill shadow-sm mb-3" onclick="startScan()">
+                                <i class="bi bi-camera me-2"></i> Mulai Scan
+                            </button>
+                            <div id="reader"></div>
+                        </div>
+                    </div>
+
+                    <!-- Result Area -->
+                    <div class="col-md-6 mb-4">
+                        <div class="result-card text-center">
+                            <h5 class="mb-4 fw-bold">Informasi Scan</h5>
+                            
+                            <div id="scan-alert" class="alert alert-success fw-bold" style="display: none;">
+                                <!-- Alert content -->
+                            </div>
+
+                            <img src="https://ui-avatars.com/api/?name=P&background=f3f4f6&color=a1a1aa&size=100" class="avatar" alt="Avatar">
+                            
+                            <h4 id="res-name" class="fw-bold">-</h4>
+                            <p class="text-muted mb-4"><span id="res-nis">-</span> | <span id="res-class">-</span></p>
+                            
+                            <div class="row text-start bg-light p-3 rounded mb-3">
+                                <div class="col-12 mb-3 border-bottom pb-2">
+                                    <small class="text-muted d-block">Kelompok</small>
+                                    <strong id="res-group">-</strong>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <small class="text-muted d-block">Pengambilan</small>
+                                    <div id="res-status-pickup">-</div>
+                                </div>
+                                <div class="col-6 mb-2 text-end">
+                                    <small class="text-muted d-block">Pengembalian</small>
+                                    <div id="res-status-return">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GROUPS SECTION -->
+            <section id="groups" class="section-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold">Data Kelompok MBG</h4>
+                </div>
+                <div class="row" id="groups-container">
+                    <!-- Groups rendered by JS -->
+                </div>
+            </section>
+
+            <!-- GROUP DETAIL SECTION (Hidden by default) -->
+            <section id="group-detail" class="section-page">
+                <div class="mb-4">
+                    <button class="btn btn-light shadow-sm" onclick="document.querySelector('a[href=\'#groups\']').click()"><i class="bi bi-arrow-left"></i> Kembali</button>
+                </div>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center bg-light rounded">
+                        <div>
+                            <h4 id="detail-group-name" class="fw-bold text-success mb-1">Nama Kelompok</h4>
+                            <p class="text-muted mb-0">Informasi detail pengambilan kelompok.</p>
+                        </div>
+                        <div class="d-flex gap-4 text-center">
+                            <div><h5 class="fw-bold mb-0" id="detail-total">0</h5><small class="text-muted">Total</small></div>
+                            <div><h5 class="fw-bold text-success mb-0" id="detail-picked">0</h5><small class="text-muted">Sudah</small></div>
+                            <div><h5 class="fw-bold text-danger mb-0" id="detail-notpicked">0</h5><small class="text-muted">Belum</small></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>QR ID</th>
+                                        <th>Nama Peserta</th>
+                                        <th>Kelas</th>
+                                        <th>Status</th>
+                                        <th>Jam Scan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-table-body">
+                                    <!-- Rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STUDENTS SECTION -->
+            <section id="students" class="section-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold">Semua Data Peserta</h4>
+                    <button class="btn btn-outline-secondary"><i class="bi bi-download"></i> Export Excel</button>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>ID</th>
+                                        <th>Nama</th>
+                                        <th>NIS</th>
+                                        <th>Kelas</th>
+                                        <th>Kelompok</th>
+                                        <th>Status Ambil</th>
+                                        <th>Status Kembali</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="students-table-body">
+                                    <!-- Rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRINT CARDS SECTION -->
+            <section id="print" class="section-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold">Cetak Kartu Peserta</h4>
+                    <button class="btn btn-primary shadow-sm" onclick="printCards()"><i class="bi bi-printer me-2"></i>Cetak Semua Kartu</button>
+                </div>
+                
+                <div class="bg-white p-4 rounded shadow-sm text-center" id="cetak-kartu">
+                    <div id="cards-container" class="d-flex flex-wrap justify-content-center">
+                        <!-- Cards rendered by JS -->
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+    
+    <!-- HTML5 QRCode library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <!-- QRCode Generator for ID Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Custom Logic -->
+    <script>
+        const initialGroups = [
+    {
+        "id": "G1",
+        "name": "Kelompok 1 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G2",
+        "name": "Kelompok 2 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G3",
+        "name": "Kelompok 3 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G4",
+        "name": "Kelompok 4 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G5",
+        "name": "Kelompok 5 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G6",
+        "name": "Kelompok 6 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G7",
+        "name": "Kelompok 7 (10 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G8",
+        "name": "Kelompok 1 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G9",
+        "name": "Kelompok 2 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G10",
+        "name": "Kelompok 3 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G11",
+        "name": "Kelompok 4 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G12",
+        "name": "Kelompok 5 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G13",
+        "name": "Kelompok 6 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G14",
+        "name": "Kelompok 7 (10 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G15",
+        "name": "Kelompok 1 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G16",
+        "name": "Kelompok 2 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G17",
+        "name": "Kelompok 3 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G18",
+        "name": "Kelompok 4 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G19",
+        "name": "Kelompok 5 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G20",
+        "name": "Kelompok 6 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G21",
+        "name": "Kelompok 7 (11 TKJ 1)",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "G22",
+        "name": "Kelompok 1 (11 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G23",
+        "name": "Kelompok 2 (11 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G24",
+        "name": "Kelompok 3 (11 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G25",
+        "name": "Kelompok 4 (11 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G26",
+        "name": "Kelompok 5 (11 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G27",
+        "name": "Kelompok 6 (11 TKJ 2)",
+        "color": "#a855f7"
+    },
+    {
+        "id": "G28",
+        "name": "Kelompok 7 (11 TKJ 2)",
+        "color": "#a855f7"
+    }
+];
+
+const initialStudents = [
+    {
+        "id": "MBG001",
+        "name": "ABDUL DHELFIN",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G1",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG002",
+        "name": "ABDUL FATIH PRASETIO",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G1",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG003",
+        "name": "ABRAR AOZORA HATTA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G1",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG004",
+        "name": "ADAM RADIKA PUTRA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G1",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG005",
+        "name": "ALDINO EVANDER",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G1",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG006",
+        "name": "ARRASYID IQBAL",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G2",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG007",
+        "name": "ASHYFA SALSABILA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G2",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG008",
+        "name": "FAHMI AULIA RASYID",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G2",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG009",
+        "name": "FALEH ANUGERAH",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G2",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG010",
+        "name": "FARHAN HIDAYAT",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G2",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG011",
+        "name": "FARIS NAUVAL IRANDRA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G3",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG012",
+        "name": "FASYILLA PUTRI RAHMADHANI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G3",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG013",
+        "name": "FIL ARDI HUSNUL QULUQI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G3",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG014",
+        "name": "GIBRAN ALMER JAMAIL",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G3",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG015",
+        "name": "IBNU AL RASYID",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G3",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG016",
+        "name": "JUAN RENARDO",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G4",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG017",
+        "name": "M RAFA ANAIERS HAFIZH",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G4",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG018",
+        "name": "M. FATHURAHMAN ATH THAARIQ",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G4",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG019",
+        "name": "M. RILY ALZIKRA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G4",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG020",
+        "name": "MHD. RIZQI RAMADHAN",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G4",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG021",
+        "name": "MUHAMMAD ANURKY AKBAR",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G5",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG022",
+        "name": "NAIRA ACELIN",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G5",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG023",
+        "name": "NAYLA RAMADHANI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G5",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG024",
+        "name": "RADHI AL FATHIR EFENDI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G5",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG025",
+        "name": "RAGYL SAPUTRA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G5",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG026",
+        "name": "RAMADANI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G6",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG027",
+        "name": "RENDI IFNALDI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G6",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG028",
+        "name": "REZA DENIZIO",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G6",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG029",
+        "name": "RIKO PRATAMA",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G6",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG030",
+        "name": "SHAFA MIFTAHUL R",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G6",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG031",
+        "name": "ULFA AL-KHALIFI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G6",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG032",
+        "name": "WAIS ALVANI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G7",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG033",
+        "name": "YAQZAN REYZAKI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G7",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG034",
+        "name": "ZAHIRA PUTRI ANDINI",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G7",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG035",
+        "name": "ZAIKHATUL AULIA RAHMAN",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G7",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG036",
+        "name": "ZAKI AZIZ SYAHID",
+        "nis": "-",
+        "class": "10 TKJ 1",
+        "groupId": "G7",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG037",
+        "name": "ALISA KHAIRANY",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G8",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG038",
+        "name": "ARKAN MAULANA MALIK",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G8",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG039",
+        "name": "DIWA MUHAMMAD RISKI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G8",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG040",
+        "name": "FADHIL PRATAMA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G8",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG041",
+        "name": "FADLAN AL HASBI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G8",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG042",
+        "name": "FADLI ALGHIFARI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G9",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG043",
+        "name": "FAJRI ERDIAN PRATAMA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G9",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG044",
+        "name": "FAKHIRAH ADELLYNA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G9",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG045",
+        "name": "FATHAN AL FHARAQ",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G9",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG046",
+        "name": "FAUZAN ALHARIS",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G9",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG047",
+        "name": "FHAREZ BINTANG MAULANA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G10",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG048",
+        "name": "HABIL FIKRIALI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G10",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG049",
+        "name": "IBNU FAIZ",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G10",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG050",
+        "name": "INDAH SAFA RAMADHAN",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G10",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG051",
+        "name": "KAISAN ARFAN HAMIZAN",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G10",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG052",
+        "name": "KEYZIO GUSTANO RAMADHAN",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G11",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG053",
+        "name": "LAHIFA PUTRI HUMAIRA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G11",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG054",
+        "name": "MAULANA HASBI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G11",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG055",
+        "name": "MUHAMAD SHABRAN",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G11",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG056",
+        "name": "MUHAMMAD AHSANI TAQWIM",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G11",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG057",
+        "name": "M. AKBAR ZHARIF AL GHIFARI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G12",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG058",
+        "name": "MUHAMMAD ALDIYANSYAH",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G12",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG059",
+        "name": "MUHAMMAD ALFI AKHMAR",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G12",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG060",
+        "name": "MUHAMMAD ALIF ALGIBRAN",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G12",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG061",
+        "name": "MUHAMMAD AR ROSYIID ILHAM",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G12",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG062",
+        "name": "MUHAMMAD FAKHRI ALFARIZI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G13",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG063",
+        "name": "MUHAMMAD RHEYHAN AL IKRAM",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G13",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG064",
+        "name": "NABIL THUFAIL KOSHI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G13",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG065",
+        "name": "NABILA OKTAVIRA YAZHA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G13",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG066",
+        "name": "NIKEYSHA OKTAVELIN",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G13",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG067",
+        "name": "RAKA DERO ALBAQI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G13",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG068",
+        "name": "RAMZHY AL MUTAKABBIR",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G14",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG069",
+        "name": "RAZAQI ANUGRAH",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G14",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG070",
+        "name": "REGINA ANINDYA PUTRI",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G14",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG071",
+        "name": "RIDHO MUHARRAM HAMARTA",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G14",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG072",
+        "name": "RIZKY NUR MUHAMMAD",
+        "nis": "-",
+        "class": "10 TKJ 2",
+        "groupId": "G14",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG073",
+        "name": "Abid Shodiq Alhafiz",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G15",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG074",
+        "name": "Adi Prayogo",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G15",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG075",
+        "name": "Afiif Salman Alhadi",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G15",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG076",
+        "name": "Akbar Julio",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G15",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG077",
+        "name": "Aldenov Boys Jursa",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G15",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG078",
+        "name": "Alfa Zikri",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G16",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG079",
+        "name": "Aqif Ar Rayyan",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G16",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG080",
+        "name": "Arza Hidayatur Rahman",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G16",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG081",
+        "name": "Atha Valeri",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G16",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG082",
+        "name": "Azizuddaffa",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G16",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG083",
+        "name": "Dharib Zam Zami",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G17",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG084",
+        "name": "Diego Armando",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G17",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG085",
+        "name": "Digo Helino",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G17",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG086",
+        "name": "Faaiz Fadhlullah",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G17",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG087",
+        "name": "Fadhil Ihsan",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G17",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG088",
+        "name": "Fajar Evanno Pratama",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G18",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG089",
+        "name": "Fajar Harapan",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G18",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG090",
+        "name": "Fajri Agema Illahi",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G18",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG091",
+        "name": "Farhan Sabrianto",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G18",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG092",
+        "name": "Fathir Anderas Ramadhan",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G18",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG093",
+        "name": "Fauzan Fadhillah",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G19",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG094",
+        "name": "Ghani Marwan Adaf",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G19",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG095",
+        "name": "Ibrahim Jalu Sagara",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G19",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG096",
+        "name": "Ilma Dhiya",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G19",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG097",
+        "name": "Keanu Putra Davicki",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G19",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG098",
+        "name": "Luna Puti Febrina",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G20",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG099",
+        "name": "Luthfi Raziq Ramadhan",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G20",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG100",
+        "name": "Mhd. Sahid Yusuf",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G20",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG101",
+        "name": "Muhamad Faiz Farizi",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G20",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG102",
+        "name": "Salsa Nabila Putri",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G20",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG103",
+        "name": "Savela Qalbi Anita",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G21",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG104",
+        "name": "Vany Aisyah Fitri",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G21",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG105",
+        "name": "Yuliana",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G21",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG106",
+        "name": "Zacky Puyan",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G21",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG107",
+        "name": "Zega Melandri",
+        "nis": "-",
+        "class": "11 TKJ 1",
+        "groupId": "G21",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG108",
+        "name": "Caesar Dzakwan Shauqiy Ananta",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G22",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG109",
+        "name": "Hafizh Mutawakillah",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G22",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG110",
+        "name": "Hari Ramdani",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G22",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG111",
+        "name": "Husna Aulia Putri",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G22",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG112",
+        "name": "I'Zatul Najwa",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G22",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG113",
+        "name": "Keanu Sami Yusuf",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G23",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG114",
+        "name": "Khaizuran Dzaka Diwa",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G23",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG115",
+        "name": "Latania Fidzikri",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G23",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG116",
+        "name": "Lionel Daffa",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G23",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG117",
+        "name": "Mario Amrinola Pratama",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G23",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG118",
+        "name": "Maulana Idris",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G24",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG119",
+        "name": "Mhd. Revan Ramadhan",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G24",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG120",
+        "name": "Muhammad Rafi Maulana",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G24",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG121",
+        "name": "Muhammad Zhafran Al Wafir",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G24",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG122",
+        "name": "Nabil Syahid Fillah",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G24",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG123",
+        "name": "Rahmat Rafi'Ul Amin",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G25",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG124",
+        "name": "Ryandi Dharma Putra",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G25",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG125",
+        "name": "Vyoriyander Caesar Ares",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G25",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG126",
+        "name": "Zaky Novtan Ananda",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G25",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG127",
+        "name": "Abelka Gerald Monamza",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G25",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG128",
+        "name": "Bayu Anggara Ramadhan",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G26",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG129",
+        "name": "Marsa Wafiq Musadiq",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G26",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG130",
+        "name": "Maulana Al-Faruqi Dalimunthe",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G26",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG131",
+        "name": "Mhd. Abdul Razaq",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G26",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG132",
+        "name": "Muhammad Habib Wardiyan",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G26",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG133",
+        "name": "Raihan Geovani Fitrah",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G27",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG134",
+        "name": "Raisya Maharani Lutfi",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G27",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG135",
+        "name": "Randa Alghani Fedli",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G27",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG136",
+        "name": "Rasya Alvaro",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G27",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG137",
+        "name": "Rasyid Alfarizi",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G27",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG138",
+        "name": "Sultan Arif Zaini",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G27",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG139",
+        "name": "Tifani Dwi Andira",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G28",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG140",
+        "name": "Varel Rahmat Ramadhan",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G28",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    },
+    {
+        "id": "MBG141",
+        "name": "Vicra Septian Nalda",
+        "nis": "-",
+        "class": "11 TKJ 2",
+        "groupId": "G28",
+        "status": false,
+        "scanTime": null,
+        "statusReturn": false,
+        "returnTime": null
+    }
+];
+
+        function initData() {
+            if (!localStorage.getItem('mbg_groups_v4')) {
+                localStorage.setItem('mbg_groups_v4', JSON.stringify(initialGroups));
+            }
+            if (!localStorage.getItem('mbg_students_v4')) {
+                localStorage.setItem('mbg_students_v4', JSON.stringify(initialStudents));
+            }
+        }
+
+        // Call on load
+        initData();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Utils ---
+            const getStudents = () => JSON.parse(localStorage.getItem('mbg_students_v4')) || [];
+            const getGroups = () => JSON.parse(localStorage.getItem('mbg_groups_v4')) || [];
+            const saveStudents = (data) => localStorage.setItem('mbg_students_v4', JSON.stringify(data));
+            let currentScanMode = 'pickup';
+
+            window.setScanMode = (mode) => {
+                currentScanMode = mode;
+                document.getElementById('scan-title').textContent = mode === 'pickup' ? 'Scan QR Code (Pengambilan)' : 'Scan QR Code (Pengembalian)';
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.clear();
+                    document.getElementById('btn-start-scan').style.display = 'inline-block';
+                }
+            };
+            
+            // --- Time Update ---
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('current-datetime').textContent = now.toLocaleString('id-ID', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+            }, 1000);
+
+            // --- Navigation ---
+            const links = document.querySelectorAll('.sidebar-menu a');
+            const sections = document.querySelectorAll('.section-page');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    
+                    // Handle active class
+                    links.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+
+                    // Handle section visibility
+                    sections.forEach(sec => {
+                        sec.classList.remove('active');
+                        if(sec.id === targetId) sec.classList.add('active');
+                    });
+
+                    // Trigger specific renders
+                    if (targetId === 'dashboard') renderDashboard();
+                    if (targetId === 'groups') renderGroups();
+                    if (targetId === 'students') renderStudents();
+                    if (targetId === 'print') renderPrintCards();
+                });
+            });
+
+            // --- Render Functions ---
+            function renderDashboard() {
+                const students = getStudents();
+                const groups = getGroups();
+                
+                const total = students.length;
+                const pickedUp = students.filter(s => s.status).length;
+                const returnedCount = students.filter(s => s.statusReturn).length;
+                const notReturnedCount = pickedUp - returnedCount; // Yang belum kembali adalah yg sudah ambil tapi belum kembali
+
+                let groupsPicked = 0;
+                
+                let groupsReturned = 0;
+                let groupsNotReturned = 0;
+                
+                let unpickedHtml = '';
+                let unreturnedHtml = '';
+
+                groups.forEach(group => {
+                    const groupStudents = students.filter(s => s.groupId === group.id);
+                    const len = groupStudents.length;
+                    if(len === 0) return;
+
+                    const s_picked = groupStudents.filter(s => s.status).length;
+                    const s_returned = groupStudents.filter(s => s.statusReturn).length;
+
+                    // PENGAMBILAN
+                    if (s_picked === len) {
+                        groupsPicked++;
+                    } else {
+                        let badge = '<span class="badge bg-danger">Belum Sama Sekali</span>';
+                        if(s_picked > 0) badge = '<span class="badge bg-warning text-dark">Baru Sebagian</span>';
+                        
+                        unpickedHtml += `
+                            <tr>
+                                <td class="px-3 fw-bold">${group.name}</td>
+                                <td>${badge}</td>
+                            </tr>
+                        `;
+                    }
+
+                    // PENGEMBALIAN (Hanya cek yg sudah ambil)
+                    if (s_picked > 0) {
+                        if (s_returned === s_picked) {
+                            groupsReturned++;
+                        } else {
+                            groupsNotReturned++;
+                            let badgeR = '<span class="badge bg-danger">Belum Sama Sekali</span>';
+                            if(s_returned > 0) badgeR = '<span class="badge bg-warning text-dark">Baru Sebagian</span>';
+                            
+                            unreturnedHtml += `
+                                <tr>
+                                    <td class="px-3 fw-bold">${group.name}</td>
+                                    <td>${badgeR}</td>
+                                </tr>
+                            `;
+                        }
+                    }
+                });
+
+                if(unpickedHtml === '') unpickedHtml = `<tr><td colspan="2" class="text-center py-3 text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Semua kelompok sudah mengambil MBG!</td></tr>`;
+                if(unreturnedHtml === '') unreturnedHtml = `<tr><td colspan="2" class="text-center py-3 text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Semua kelompok sudah mengembalikan!</td></tr>`;
+
+                const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+                const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+
+                setTxt('stat-total', total);
+                setTxt('stat-picked', pickedUp);
+                setTxt('stat-groups', groups.length);
+                setTxt('stat-groups-picked', groupsPicked);
+                setHtml('unpicked-groups-list', unpickedHtml);
+
+                setTxt('stat-returned', returnedCount);
+                setTxt('stat-notreturned', notReturnedCount);
+                setTxt('stat-groups-returned', groupsReturned);
+                setTxt('stat-groups-notreturned', groupsNotReturned);
+                setHtml('unreturned-groups-list', unreturnedHtml);
+            }
+
+            function renderGroups() {
+                const groups = getGroups();
+                const students = getStudents();
+                const container = document.getElementById('groups-container');
+                container.innerHTML = '';
+
+                groups.forEach(group => {
+                    const groupStudents = students.filter(s => s.groupId === group.id);
+                    const total = groupStudents.length;
+                    const pickedUp = groupStudents.filter(s => s.status).length;
+                    const percent = total === 0 ? 0 : Math.round((pickedUp / total) * 100);
+                    
+                    let statusBadge = `<span class="badge bg-secondary">Belum Dimulai</span>`;
+                    if (pickedUp > 0 && pickedUp < total) statusBadge = `<span class="badge bg-warning text-dark">Sedang Berlangsung</span>`;
+                    if (pickedUp === total && total > 0) statusBadge = `<span class="badge bg-success">Selesai</span>`;
+
+                    container.innerHTML += `
+                        <div class="col-md-4 mb-4">
+                            <div class="group-card" style="border-top-color: ${group.color}" onclick="viewGroupDetail('${group.id}')">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0 fw-bold">${group.name}</h5>
+                                    ${statusBadge}
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small mb-2">
+                                    <span>Peserta: ${total}</span>
+                                    <span>Sudah Ambil: ${pickedUp}</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${percent}%" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="text-end mt-1 small text-muted">${percent}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            window.viewGroupDetail = (groupId) => {
+                const group = getGroups().find(g => g.id === groupId);
+                const students = getStudents().filter(s => s.groupId === groupId);
+                const total = students.length;
+                const pickedUp = students.filter(s => s.status).length;
+
+                document.getElementById('detail-group-name').textContent = group.name;
+                document.getElementById('detail-total').textContent = total;
+                document.getElementById('detail-picked').textContent = pickedUp;
+                document.getElementById('detail-notpicked').textContent = total - pickedUp;
+
+                const tbody = document.getElementById('detail-table-body');
+                tbody.innerHTML = '';
+                students.forEach((s, idx) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${s.id}</td>
+                            <td>${s.name}</td>
+                            <td>${s.class}</td>
+                            <td>${s.status ? '<span class="badge bg-success">Sudah</span>' : '<span class="badge bg-danger">Belum</span>'}</td>
+                            <td>${s.scanTime || '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                // Switch tab
+                sections.forEach(sec => sec.classList.remove('active'));
+                document.getElementById('group-detail').classList.add('active');
+                links.forEach(l => l.classList.remove('active'));
+            };
+
+            function renderStudents() {
+                const students = getStudents();
+                const groups = getGroups();
+                const tbody = document.getElementById('students-table-body');
+                tbody.innerHTML = '';
+                
+                students.forEach((s, idx) => {
+                    const group = groups.find(g => g.id === s.groupId);
+                    let statusAmbil = s.status ? '<span class="badge bg-success">Sudah Ambil</span>' : '<span class="badge bg-secondary">Belum Ambil</span>';
+                    let statusKembali = s.statusReturn ? '<span class="badge bg-primary">Sudah Kembali</span>' : '<span class="badge bg-secondary">Belum Kembali</span>';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${s.id}</td>
+                            <td>${s.name}</td>
+                            <td>${s.nis}</td>
+                            <td>${s.class}</td>
+                            <td>${group ? group.name : '-'}</td>
+                            <td>${statusAmbil}</td>
+                            <td>${statusKembali}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            function renderPrintCards() {
+                const students = getStudents();
+                const groups = getGroups();
+                const container = document.getElementById('cards-container');
+                container.innerHTML = '';
+
+                groups.forEach((group, idx) => {
+                    const groupStudents = students.filter(s => s.groupId === group.id);
+                    const color = group.color || '#10b981';
+                    const cardId = `qr-code-${group.id}`;
+                    
+                    let membersHtml = groupStudents.map((s, i) => `
+                        <div style="font-size: 0.85rem; padding: 4px 0; border-bottom: 1px solid #eee; text-align: left;">
+                            ${i + 1}. ${s.name} ${i === 0 ? '(Ketua)' : ''}
+                        </div>
+                    `).join('');
+                    
+                    container.innerHTML += `
+                        <div class="id-card-wrapper" style="width: 500px; height: auto; min-height: 250px; display: flex; flex-direction: row; border-top: none; border-left: 5px solid ${color};">
+                            <!-- Kiri: Info Group & QR -->
+                            <div style="width: 220px; display: flex; flex-direction: column; border-right: 1px dashed #ddd; background: #fff;">
+                                <div class="id-card-header" style="background-color: ${color}; padding: 15px 10px;">
+                                    <h6 class="mb-0 text-white fw-bold">KARTU KELOMPOK</h6>
+                                    <small class="text-white" style="font-size: 0.75rem; opacity: 0.9;">Sistem Pengambilan MBG</small>
+                                </div>
+                                <div class="id-card-body" style="flex: 1; padding: 15px;">
+                                    <h6 class="fw-bold text-dark mb-3">${group.name}</h6>
+                                    <div id="${cardId}" class="id-card-qr" style="width: 120px; height: 120px; margin: 0 auto;"></div>
+                                    <small class="text-muted d-block mt-3 fw-bold">ID: ${group.id}</small>
+                                </div>
+                            </div>
+                            <!-- Kanan: Anggota -->
+                            <div style="flex: 1; padding: 20px; background: #fafafa; display: flex; flex-direction: column;">
+                                <h6 class="fw-bold mb-3" style="color: ${color}; text-align: left; border-bottom: 2px solid ${color}; padding-bottom: 8px;">Daftar Anggota Kelompok</h6>
+                                <div style="flex: 1; text-align: left;">
+                                    ${membersHtml}
+                                </div>
+                                <div style="margin-top: 15px; font-size: 0.75rem; color: #888; text-align: left; font-style: italic;">
+                                    * Scan QR untuk menandai seluruh anggota sudah mengambil MBG
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Generate QRs
+                setTimeout(() => {
+                    groups.forEach(group => {
+                        new QRCode(document.getElementById(`qr-code-${group.id}`), {
+                            text: group.id,
+                            width: 120,
+                            height: 120,
+                            colorDark : "#000000",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.H
+                        });
+                    });
+                }, 100);
+            }
+
+            // --- QR Scanner ---
+            let html5QrcodeScanner = null;
+            
+            window.startScan = () => {
+                document.getElementById('btn-start-scan').style.display = 'none';
+                
+                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            };
+
+            function onScanSuccess(decodedText, decodedResult) {
+                html5QrcodeScanner.pause();
+                
+                const students = getStudents();
+                const groups = getGroups();
+                
+                const group = groups.find(g => g.id === decodedText);
+                const studentIndex = students.findIndex(s => s.id === decodedText);
+                
+                const alertBox = document.getElementById('scan-alert');
+
+                if (group) {
+                    const groupStudents = students.filter(s => s.groupId === group.id);
+                    const unpicked = groupStudents.filter(s => !s.status);
+                    const unreturned = groupStudents.filter(s => !s.statusReturn);
+                    
+                    document.getElementById('res-name').textContent = group.name;
+                    document.getElementById('res-nis').textContent = "Ketua/Perwakilan";
+                    document.getElementById('res-class').textContent = "Group Scan";
+                    document.getElementById('res-group').textContent = group.name;
+                    
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+
+                    // Helper to update dual status
+                    const updateDualStatus = () => {
+                        const s_unpicked = students.filter(s => s.groupId === group.id && !s.status).length;
+                        const s_unreturned = students.filter(s => s.groupId === group.id && !s.statusReturn).length;
+                        const len = groupStudents.length;
+
+                        let pickupBadge = '<span class="badge bg-secondary">Belum Ambil</span>';
+                        if (s_unpicked === 0 && len > 0) pickupBadge = '<span class="badge bg-success">Sudah Ambil</span>';
+                        else if (s_unpicked < len) pickupBadge = '<span class="badge bg-warning text-dark">Sebagian</span>';
+
+                        let returnBadge = '<span class="badge bg-secondary">Belum Kembali</span>';
+                        if (s_unreturned === 0 && len > 0) returnBadge = '<span class="badge bg-primary">Sudah Kembali</span>';
+                        else if (s_unreturned < len) returnBadge = '<span class="badge bg-warning text-dark">Sebagian</span>';
+
+                        document.getElementById('res-status-pickup').innerHTML = pickupBadge;
+                        document.getElementById('res-status-return').innerHTML = returnBadge;
+                    };
+
+                    if (currentScanMode === 'pickup') {
+                        if (unpicked.length > 0) {
+                            students.forEach(s => {
+                                if (s.groupId === group.id) {
+                                    s.status = true;
+                                    s.scanTime = s.scanTime || timeStr;
+                                }
+                            });
+                            saveStudents(students);
+                            renderDashboard();
+                            
+                            updateDualStatus();
+                            alertBox.className = 'alert alert-success fw-bold';
+                            alertBox.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Berhasil. ${group.name} telah mengambil MBG.`;
+                            alertBox.style.display = 'block';
+                            Swal.fire({icon: 'success', title: 'Berhasil!', text: `${group.name} telah mengambil MBG`, timer: 2000, showConfirmButton: false});
+                        } else {
+                            updateDualStatus();
+                            alertBox.className = 'alert alert-danger fw-bold';
+                            alertBox.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Kelompok ini sudah mengambil MBG sebelumnya.';
+                            alertBox.style.display = 'block';
+                            Swal.fire({icon: 'error', title: 'Peringatan!', text: `${group.name} sudah mengambil MBG sebelumnya!`, timer: 2000, showConfirmButton: false});
+                        }
+                    } else if (currentScanMode === 'return') {
+                        // Check if they have picked up
+                        if (unpicked.length === groupStudents.length) {
+                            // Nobody picked up yet
+                            updateDualStatus();
+                            alertBox.className = 'alert alert-danger fw-bold';
+                            alertBox.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Belum mengambil MBG, tidak bisa mengembalikan.';
+                            alertBox.style.display = 'block';
+                            Swal.fire({icon: 'error', title: 'Peringatan!', text: `${group.name} belum mengambil MBG!`, timer: 2000, showConfirmButton: false});
+                        } else if (unreturned.length > 0) {
+                            // Can return
+                            students.forEach(s => {
+                                if (s.groupId === group.id && s.status) {
+                                    s.statusReturn = true;
+                                    s.returnTime = s.returnTime || timeStr;
+                                }
+                            });
+                            saveStudents(students);
+                            renderDashboard();
+                            
+                            updateDualStatus();
+                            alertBox.className = 'alert alert-success fw-bold';
+                            alertBox.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Berhasil. ${group.name} telah mengembalikan kotak makan.`;
+                            alertBox.style.display = 'block';
+                            Swal.fire({icon: 'success', title: 'Berhasil!', text: `${group.name} telah mengembalikan MBG`, timer: 2000, showConfirmButton: false});
+                        } else {
+                            updateDualStatus();
+                            alertBox.className = 'alert alert-danger fw-bold';
+                            alertBox.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Kelompok ini sudah mengembalikan MBG sebelumnya.';
+                            alertBox.style.display = 'block';
+                            Swal.fire({icon: 'error', title: 'Peringatan!', text: `${group.name} sudah mengembalikan MBG sebelumnya!`, timer: 2000, showConfirmButton: false});
+                        }
+                    }
+                } else {
+                    Swal.fire({icon: 'error', title: 'Tidak Ditemukan', text: 'QR Code tidak valid.', timer: 2000, showConfirmButton: false});
+                }
+
+                setTimeout(() => {
+                    document.getElementById('scan-alert').style.display = 'none';
+                    html5QrcodeScanner.resume();
+                }, 3000);
+            }
+
+            function onScanFailure(error) {
+                // ignore
+            }
+
+            // --- Utility Buttons ---
+            window.resetData = () => {
+                Swal.fire({
+                    title: 'Reset Semua Data?',
+                    text: "Status pengambilan seluruh peserta akan dikembalikan seperti semula (Belum Mengambil).",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Reset!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const students = getStudents();
+                        students.forEach(s => {
+                            s.status = false;
+                            s.scanTime = null;
+                            s.statusReturn = false;
+                            s.returnTime = null;
+                        });
+                        saveStudents(students);
+                        renderDashboard();
+                        renderGroups();
+                        renderStudents();
+                        
+                        // Clear scan info UI safely
+                        try {
+                            const setEl = (id, text) => { 
+                                const el = document.getElementById(id); 
+                                if(el) el.innerHTML = text; 
+                            };
+                            setEl('res-name', '-');
+                            setEl('res-nis', '-');
+                            setEl('res-class', '-');
+                            setEl('res-group', '-');
+                            setEl('res-status-pickup', '-');
+                            setEl('res-status-return', '-');
+                        } catch(e) {
+                            console.error('Error clearing UI:', e);
+                        }
+                        
+                        Swal.fire('Ter-reset!', 'Data berhasil direset.', 'success');
+                    }
+                })
+            };
+
+            window.printCards = () => {
+                window.print();
+            };
+
+            // Initial render
+            renderDashboard();
+        });
+    </script>
+</body>
+</html>
